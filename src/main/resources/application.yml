@@ -1,0 +1,16 @@
+spring:
+  application:
+    name: smartbilling
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/smartbilling
+    username: ayette
+    password: ayette
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+server:
+  port: 8081
