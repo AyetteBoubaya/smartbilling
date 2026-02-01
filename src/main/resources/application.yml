@@ -4,7 +4,7 @@ spring:
 
   datasource:
     url: jdbc:postgresql://localhost:5432/smartbilling
-    username: ayette
+    username: postgres
     password: ayette
     driver-class-name: org.postgresql.Driver
   jpa:
