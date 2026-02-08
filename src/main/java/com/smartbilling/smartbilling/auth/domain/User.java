@@ -8,7 +8,7 @@ import org.jspecify.annotations.Nullable;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name ="users")
+@Table(name ="consumers")
 @Data
 public class User {
 
