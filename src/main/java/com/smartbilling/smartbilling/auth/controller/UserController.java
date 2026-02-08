@@ -4,6 +4,7 @@ import com.smartbilling.smartbilling.auth.domain.Role;
 import com.smartbilling.smartbilling.auth.domain.User;
 import com.smartbilling.smartbilling.auth.dto.requests.UserRequest;
 import com.smartbilling.smartbilling.auth.dto.responses.UserResponse;
+import com.smartbilling.smartbilling.auth.repository.UserRepository;
 import com.smartbilling.smartbilling.auth.service.UserService;
 import com.smartbilling.smartbilling.auth.service.UserServiceImpl;
 import jakarta.validation.Valid;
@@ -15,10 +16,12 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
 
     private final UserService userService;
+    private final UserRepository userRepository;
 
-    public UserController(UserService userService) {
+    public UserController(UserService userService, UserRepository userRepository) {
 
         this.userService = userService;
+        this.userRepository = userRepository;
     }
 
     @PostMapping
@@ -33,4 +36,35 @@ public class UserController {
         return new UserResponse(saved.getId(), saved.getEmail(), saved.getRole());
     }
 
+    @PutMapping("/{email}")
+    @ResponseStatus(HttpStatus.OK)
+    public UserResponse updateUser(@PathVariable String email ,@RequestBody @Valid UserRequest request){
+        User userToUpdate = new User();
+        userToUpdate.setEmail(email);
+        userToUpdate.setPassword(request.password());
+        userToUpdate.setRole(Role.User);
+
+        User update = userService.updateUser(userToUpdate);
+        return new UserResponse(update.getId(), update.getEmail(), update.getRole());
+    }
+
+    @DeleteMapping("/{email}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteUser(@PathVariable String email){
+        User userToDelete = new User();
+        userToDelete.setEmail(email);
+
+        userService.deleteUser(userToDelete);
+    }
+
+    @GetMapping("/{email}")
+    @ResponseStatus(HttpStatus.OK)
+    public UserResponse getUser(@PathVariable String email){
+        User userToGet = new User();
+        userToGet.setEmail(email);
+        userToGet.setRole(Role.User);
+
+        userService.getUserByEmail(userToGet.getEmail());
+        return new UserResponse(userToGet.getId(), userToGet.getEmail(), userToGet.getRole());
+    }
 }
