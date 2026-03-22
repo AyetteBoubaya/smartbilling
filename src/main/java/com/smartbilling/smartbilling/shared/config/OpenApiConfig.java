@@ -52,7 +52,7 @@ public class OpenApiConfig {
                 )
                 // ── Serveurs ───────────────────────────────────────
                 .servers(List.of(
-                        new Server().url("http://localhost:8080").description("Développement local"),
+                        new Server().url("http://localhost:8081").description("Développement local"),
                         new Server().url(serverUrl).description("Serveur de production")
                 ))
                 // ── Schéma de sécurité JWT ─────────────────────────

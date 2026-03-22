@@ -12,7 +12,6 @@ import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
-
 @Service
 @Slf4j
 public class JwtService {
@@ -23,19 +22,19 @@ public class JwtService {
     @Value("${app.jwt.expiration-ms}")
     private long jwtExpirationMs;
 
-    // ── Génération ────────────────────────────────────────────────
+    // ── Génération ────────────────────────────────────────────
 
     public String generateToken(String email, boolean emailVerified) {
         return Jwts.builder()
                 .subject(email)
-                .claim("emailVerified", emailVerified)  // ← avertissement frontend
+                .claim("emailVerified", emailVerified)
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + jwtExpirationMs))
                 .signWith(getSigningKey())
                 .compact();
     }
 
-    // ── Extraction ────────────────────────────────────────────────
+    // ── Extraction ────────────────────────────────────────────
 
     public String extractEmail(String token) {
         return extractClaims(token).getSubject();
@@ -45,7 +44,12 @@ public class JwtService {
         return (boolean) extractClaims(token).get("emailVerified");
     }
 
-    // ── Validation ────────────────────────────────────────────────
+    // Expose la durée en secondes pour le champ expiresIn de AuthResponse
+    public long getExpirationSeconds() {
+        return jwtExpirationMs / 1000;
+    }
+
+    // ── Validation ────────────────────────────────────────────
 
     public boolean isTokenValid(String token, UserDetails userDetails) {
         try {
@@ -57,7 +61,7 @@ public class JwtService {
         }
     }
 
-    // ── Privé ─────────────────────────────────────────────────────
+    // ── Privé ─────────────────────────────────────────────────
 
     private boolean isTokenExpired(String token) {
         return extractClaims(token).getExpiration().before(new Date());

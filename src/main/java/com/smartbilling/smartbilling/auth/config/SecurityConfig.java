@@ -29,7 +29,6 @@ public class SecurityConfig {
     private final JwtAuthFilter jwtAuthFilter;
     private final UserDetailsServiceImpl userDetailsService;
 
-    // URLs Swagger à exclure de l'authentification
     private static final String[] SWAGGER_WHITELIST = {
             "/swagger-ui.html",
             "/swagger-ui/**",
@@ -45,27 +44,24 @@ public class SecurityConfig {
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
 
-                        // ── Swagger public ─────────────────────────────────
+                        // ── Swagger ────────────────────────────────────────
                         .requestMatchers(SWAGGER_WHITELIST).permitAll()
 
                         // ── Auth public ────────────────────────────────────
                         .requestMatchers(
                                 "/api/auth/register",
                                 "/api/auth/login",
+                                "/api/auth/refresh",           // ← nouveau pour refreshToken
+                                "/api/auth/logout",            // ← nouveau
                                 "/api/auth/verify-email",
+                                "/api/auth/resend-verification",
                                 "/api/auth/forgot-password",
                                 "/api/auth/reset-password/link",
-                                "/api/auth/reset-password/otp",
-                                "/api/auth/resend-verification"
+                                "/api/auth/reset-password/otp"
                         ).permitAll()
 
-                        // ── Inscription publique ───────────────────────────
                         .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
-
-                        // ── Suppression Admin uniquement ───────────────────
                         .requestMatchers(HttpMethod.DELETE, "/api/users/**").hasRole("Admin")
-
-                        // ── Tout le reste : authentifié ────────────────────
                         .anyRequest().authenticated()
                 )
                 .authenticationProvider(authenticationProvider())
