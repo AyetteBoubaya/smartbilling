@@ -1,12 +1,14 @@
 package com.smartbilling.smartbilling.auth.service.serviceImpl;
 
 import com.smartbilling.smartbilling.auth.domain.User;
+import com.smartbilling.smartbilling.auth.repository.RefreshTokenRepository;
 import com.smartbilling.smartbilling.auth.repository.UserRepository;
 import com.smartbilling.smartbilling.auth.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -15,6 +17,7 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final RefreshTokenRepository refreshTokenRepository;
 
     @Override
     public User createUser(User user) {
@@ -26,9 +29,11 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public void deleteUser(User user) {
         User existing = userRepository.findByEmail(user.getEmail())
                 .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
+        refreshTokenRepository.deleteByUserId(existing.getId());
         userRepository.delete(existing);
         log.info("Utilisateur supprimé : {}", user.getEmail());
     }

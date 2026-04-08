@@ -2,6 +2,7 @@ package com.smartbilling.smartbilling.auth.config;
 
 import com.smartbilling.smartbilling.auth.security.JwtAuthFilter;
 import com.smartbilling.smartbilling.auth.security.UserDetailsServiceImpl;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -65,7 +66,21 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 )
                 .authenticationProvider(authenticationProvider())
-                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+                .exceptionHandling(ex->ex
+                        // Retourne 401 quand pas authentifié (pas de token)
+                        .authenticationEntryPoint((request, response, authException)-> {
+                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                            response.setContentType("application/json");
+                            response.getWriter().write("{\"error\": \"Non authentifié\"}");
+                        })
+                        // Retourne 403 quand authentifié mais pas autorisé
+                        .accessDeniedHandler((request, response, accessDeniedException) -> {
+                            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                            response.setContentType("application/json");
+                            response.getWriter().write("{\"error\": \"Accès refusé\"}");
+                        })
+                );
 
         return http.build();
     }

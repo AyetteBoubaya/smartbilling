@@ -14,7 +14,6 @@ import java.util.Optional;
 public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long> {
 
     Optional<RefreshToken> findByValue(String value);
-
     // Révoque tous les refresh tokens actifs d'un user (logout, reset password)
     @Modifying
     @Transactional
@@ -26,4 +25,6 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long
     @Transactional
     @Query("DELETE FROM RefreshToken r WHERE r.user = :user")
     void deleteAllByUser(User user);
+
+    void deleteByUserId(Long userId);
 }
