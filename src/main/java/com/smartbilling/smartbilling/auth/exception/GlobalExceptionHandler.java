@@ -4,6 +4,8 @@ import com.smartbilling.smartbilling.auth.dto.responses.ErrorResponse;
 import com.smartbilling.smartbilling.auth.dto.responses.ValidationErrorResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.validation.FieldError;
@@ -60,5 +62,13 @@ public class GlobalExceptionHandler {
     public ErrorResponse handleGenericException(Exception ex) {
         log.error("Erreur inattendue : {}", ex.getMessage(), ex);
         return new ErrorResponse(500, "Erreur serveur", "Une erreur inattendue s'est produite");
+    }
+
+    @ExceptionHandler(org.springframework.security.access.AccessDeniedException.class)
+    public ResponseEntity<Map<String, String>> handleAccessDeniedException(AccessDeniedException ex){
+        log.error("Erreur métier : {}", ex.getMessage());
+        return ResponseEntity
+                .status(HttpStatus.FORBIDDEN)
+                .body(Map.of("error", ex.getMessage()));
     }
 }
