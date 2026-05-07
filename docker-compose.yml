@@ -1,0 +1,42 @@
+services:
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: smartbilling-postgres
+    environment:
+      POSTGRES_DB: smartbilling
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ayette
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build: .
+    container_name: smartbilling-app
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/smartbilling
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: ayette
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      APP_JWT_SECRET: 7f3b9e2d1a6c8f4e0b5d7a9c2e4f6b8d1a3c5e7f9b2d4f6a8c0e2b4d6f8a1c3e
+      APP_JWT_EXPIRATION_MS: 900000
+      APP_JWT_REFRESH_EXPIRATION_MS: 604800000
+      SPRING_MAIL_HOST: smtp.gmail.com
+      SPRING_MAIL_PORT: 587
+      SPRING_MAIL_USERNAME: ayetteboubaya@gmail.com
+      SPRING_MAIL_PASSWORD: vobsmxahkcobngbu
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  postgres-data:
