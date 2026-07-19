@@ -10,8 +10,8 @@ public record CustomerRequest(
         @Pattern(regexp = "\\d{14}", message = "Le Siret doit contenir 14 chiffres") String siret,
         @NotBlank(message = "l'email est obligatoire")
         @Email(message = "format email invalide") String email,
-        int phone,
-        String adress,
+        String phone,
+        String address,
         String city,
         String postalCode
 ) {

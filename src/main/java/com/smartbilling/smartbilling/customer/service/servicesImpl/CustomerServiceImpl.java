@@ -5,6 +5,8 @@ import com.smartbilling.smartbilling.customer.dto.requests.CustomerRequest;
 import com.smartbilling.smartbilling.customer.dto.responses.CustomerResponse;
 import com.smartbilling.smartbilling.customer.repository.CustomerRepository;
 import com.smartbilling.smartbilling.customer.service.CustomerService;
+import com.smartbilling.smartbilling.shared.exception.DuplicateResourceException;
+import com.smartbilling.smartbilling.shared.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -19,17 +21,17 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     public CustomerResponse create(CustomerRequest customerRequest) {
         if (customerRepository.existsByEmail(customerRequest.email())){
-            throw new RuntimeException("Un client avec cet email existe déjà");
+            throw new DuplicateResourceException("Un client avec cet email existe déjà");
         }
         if (customerRequest.siret() != null && customerRepository.existsBySiret(customerRequest.siret())){
-            throw new RuntimeException("Un Client avec ce SIRET existe déjà");
+            throw new DuplicateResourceException("Un client avec ce SIRET existe déjà");
         }
         Customer customer = Customer.builder()
                 .companyName(customerRequest.companyName())
                 .siret(customerRequest.siret())
                 .email(customerRequest.email())
                 .phone(customerRequest.phone())
-                .address(customerRequest.adress())
+                .address(customerRequest.address())
                 .city(customerRequest.city())
                 .postalCode(customerRequest.postalCode())
                 .build();
@@ -56,7 +58,7 @@ public class CustomerServiceImpl implements CustomerService {
         customer.setSiret(customerRequest.siret());
         customer.setEmail(customerRequest.email());
         customer.setPhone(customerRequest.phone());
-        customer.setAddress(customerRequest.adress());
+        customer.setAddress(customerRequest.address());
         customer.setCity(customerRequest.city());
         customer.setPostalCode(customerRequest.postalCode());
         return toResponse(customerRepository.save(customer));
@@ -69,7 +71,8 @@ public class CustomerServiceImpl implements CustomerService {
 
     private Customer findById(Long id){
         return customerRepository.findById(id)
-                .orElseThrow(()-> new RuntimeException("Customer introuvable avec l'id : "+ id));
+                .orElseThrow(()-> new ResourceNotFoundException(
+                        "Client introuvable avec l'id : " + id));
     }
 
     private CustomerResponse toResponse(Customer c){

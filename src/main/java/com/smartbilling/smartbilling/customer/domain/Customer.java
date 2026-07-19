@@ -1,9 +1,7 @@
 package com.smartbilling.smartbilling.customer.domain;
 
 import jakarta.persistence.*;
-import lombok.Builder;
-import lombok.Data;
-import lombok.RequiredArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -11,7 +9,8 @@ import java.time.LocalDateTime;
 
 @Entity
 @Data
-@RequiredArgsConstructor
+@NoArgsConstructor
+@AllArgsConstructor
 @Table(name = "customers")
 @Builder
 public class Customer {
@@ -32,7 +31,7 @@ public class Customer {
     @Column(nullable = false)
     private String address;
 
-    private int phone;
+    private String phone;
 
     private String city;
 

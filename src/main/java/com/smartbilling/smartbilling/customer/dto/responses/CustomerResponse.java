@@ -10,7 +10,7 @@ public record CustomerResponse(
         String companyName,
         String siret,
         String email,
-        int phone,
+        String phone,
         String address,
         String city,
         String postalCode,
