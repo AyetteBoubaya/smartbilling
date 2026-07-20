@@ -31,3 +31,10 @@ build/
 
 ### VS Code ###
 .vscode/
+
+target/
+*.iml
+.idea/
+.git/
+*.md
+src/test/
