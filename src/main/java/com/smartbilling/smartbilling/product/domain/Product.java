@@ -31,6 +31,10 @@ public class Product {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
+    private ProductCategory category;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private LocalDateTime createdAt;
 
     @UpdateTimestamp

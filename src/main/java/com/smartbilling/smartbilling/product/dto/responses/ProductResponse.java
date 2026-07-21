@@ -6,6 +6,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 public record ProductResponse(
+        Long id,
         String name,
         BigDecimal priceHT,
         BigDecimal taxRate,
