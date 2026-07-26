@@ -244,7 +244,7 @@ public class InvoiceServiceImpl implements InvoiceService {
                 .notes(invoice.getNotes())
                 .createdAt(invoice.getCreatedAt())
                 .build();
-        
+
     }
 
     private InvoiceItemResponse toItemResponse(InvoiceItem item) {
