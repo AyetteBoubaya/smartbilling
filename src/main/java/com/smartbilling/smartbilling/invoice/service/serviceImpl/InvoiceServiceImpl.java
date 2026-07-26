@@ -43,22 +43,24 @@ public class InvoiceServiceImpl implements InvoiceService {
         Customer customer = customerRepository.findById(request.customerId())
                 .orElseThrow(()-> new ResourceNotFoundException(
                         "client introuvale avec l'id : "+ request.customerId()
-        ));
-         Invoice invoice = Invoice.builder()
-                 .invoiceNumber(generateInvoiceNumber())
-                 .customer(customer)
-                 .issueDate(request.issueDate() != null ? request.issueDate() : LocalDate.now())
-                 .dueDate(request.dueDate())
-                 .notes(request.notes())
-                 .status(InvoiceStatus.DRAFT)
-                 .build();
+                ));
+        Invoice invoice = Invoice.builder()
+                .invoiceNumber(generateInvoiceNumber())
+                .customer(customer)
+                .issueDate(request.issueDate() != null ? request.issueDate() : LocalDate.now())
+                .dueDate(request.dueDate())
+                .notes(request.notes())
+                .status(InvoiceStatus.DRAFT)
+                .build();
 
-         List<InvoiceItem> items = request.items().stream()
-                 .map(itemReq -> buildItem(itemReq, invoice))
-                 .toList();
-         invoice.setItems(items);
-         calculateTotals(invoice);
-        return toResponse(invoice);
+        List<InvoiceItem> items = request.items().stream()
+                .map(itemReq -> buildItem(itemReq, invoice))
+                .toList();
+        invoice.setItems(items);
+        calculateTotals(invoice);
+
+        Invoice saved = invoiceRepository.save(invoice);
+        return toResponse(saved);
     }
 
 
@@ -109,8 +111,8 @@ public class InvoiceServiceImpl implements InvoiceService {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
         try (PdfWriter writer =new PdfWriter(baos);
-            PdfDocument pdf = new PdfDocument(writer);
-            Document doc = new Document(pdf)){
+             PdfDocument pdf = new PdfDocument(writer);
+             Document doc = new Document(pdf)){
 
             //Titre
             doc.add(new Paragraph("Facture"))
