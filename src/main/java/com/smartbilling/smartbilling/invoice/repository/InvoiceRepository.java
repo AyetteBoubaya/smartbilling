@@ -19,7 +19,7 @@ public interface InvoiceRepository extends JpaRepository<Invoice, Long> {
     Page<Invoice> findByCustomerId(Long customerId, Pageable pageable);
 
     @Query("""
-SELECT i FROM Invoice in 
+SELECT i FROM Invoice i
 WHERE LOWER(i.invoiceNumber) LIKE LOWER(CONCAT('%', :search, '%'))
 OR LOWER(i.customer.companyName) LIKE LOWER(CONCAT('%', :search, '%'))
  
