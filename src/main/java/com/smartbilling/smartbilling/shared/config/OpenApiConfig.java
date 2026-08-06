@@ -18,7 +18,7 @@ import java.util.List;
 @Configuration
 public class OpenApiConfig {
 
-    @Value("${app.frontend-url:http://localhost:8080}")
+    @Value("${app.backend-url:http://localhost:8081}")
     private String serverUrl;
 
     @Bean
@@ -52,7 +52,6 @@ public class OpenApiConfig {
                 )
                 // ── Serveurs ───────────────────────────────────────
                 .servers(List.of(
-                        new Server().url("http://localhost:8081").description("Développement local"),
                         new Server().url(serverUrl).description("Serveur de production")
                 ))
                 // ── Schéma de sécurité JWT ─────────────────────────
