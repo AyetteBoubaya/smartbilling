@@ -10,10 +10,13 @@
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-blue?logo=postgresql)](https://www.postgresql.org/)
 [![Docker](https://img.shields.io/badge/Docker-ready-2496ED?logo=docker)](https://www.docker.com/)
 [![JWT](https://img.shields.io/badge/JWT-Auth-black?logo=jsonwebtokens)](https://jwt.io/)
-[![Swagger](https://img.shields.io/badge/Swagger-OpenAPI_3-85EA2D?logo=swagger)](http://localhost:8081/swagger-ui.html)
+[![Swagger](https://img.shields.io/badge/Swagger-OpenAPI_3-85EA2D?logo=swagger)](https://smartbilling-production.up.railway.app/swagger-ui.html)
+[![Railway](https://img.shields.io/badge/Railway-Deployed-blueviolet?logo=railway)](https://smartbilling-production.up.railway.app)
 [![License](https://img.shields.io/badge/License-MIT-yellow)](LICENSE)
 
 *Développé par [Ayette Boubaya](https://github.com/AyetteBoubaya)*
+
+**🔗 API live : [smartbilling-production.up.railway.app](https://smartbilling-production.up.railway.app/swagger-ui.html)**
 
 </div>
 
@@ -21,17 +24,22 @@
 
 ## 📋 Description
 
-SmartBilling est une API REST complète de gestion de facturation construite avec **Spring Boot 4.0.2**.  
-Elle expose un module d'authentification production-ready avec JWT, refresh token rotation, vérification d'email et reset de mot de passe.
+SmartBilling est une **API REST complète de gestion de facturation** construite avec Spring Boot 4.0.2 et déployée en production sur Railway.
+
+Elle couvre l'ensemble du cycle de vie d'une application de facturation B2B : authentification sécurisée, gestion des clients et produits, création et suivi des factures avec génération PDF.
 
 ### Ce que ce projet démontre
 
 - Architecture en couches (Controller → Service → Repository → Domain)
 - Sécurité stateless avec JWT + Spring Security 7
-- Refresh token rotation avec détection de réutilisation (security pattern)
-- Tests unitaires et d'intégration (JUnit 6, Mockito, H2 in-memory)
-- Conteneurisation complète avec Docker et docker-compose
-- Documentation interactive avec Swagger/OpenAPI 3
+- Refresh token rotation avec détection de réutilisation
+- Gestion des clients B2B avec pagination et recherche
+- Catalogue produits avec calcul automatique TVA/TTC (BigDecimal)
+- Facturation complète avec relations JPA, cycle de vie et génération PDF
+- Tests unitaires et d'intégration (JUnit 6, Mockito, H2)
+- Conteneurisation avec Docker et docker-compose
+- Documentation interactive Swagger/OpenAPI 3
+- Déploiement continu sur Railway (CI/CD via GitHub)
 
 ---
 
@@ -44,22 +52,27 @@ Elle expose un module d'authentification production-ready avec JWT, refresh toke
 | Sécurité | Spring Security 7 + JWT (jjwt 0.12.3) |
 | Base de données | PostgreSQL 16 |
 | ORM | Hibernate 7 + Spring Data JPA |
-| Tests | JUnit 6 + Mockito 5 + H2 |
+| Tests | JUnit 6 + Mockito 5 + H2 in-memory |
 | Documentation | Springdoc OpenAPI 3 / Swagger UI |
 | Build | Maven 3.9 |
 | Conteneurisation | Docker + docker-compose |
 | Email | Spring Mail + Gmail SMTP |
+| PDF | iTextPDF 7 |
+| Déploiement | Railway |
 
 ---
 
 ## 🚀 Démarrage rapide
 
-### Prérequis
+### Option 1 — API live (aucune installation)
 
-- [Docker Desktop](https://www.docker.com/products/docker-desktop/) installé et démarré
-- C'est tout !
+Testez directement l'API déployée sur Railway :
 
-### Lancer l'application
+```
+https://smartbilling-production.up.railway.app/swagger-ui.html
+```
+
+### Option 2 — Docker (recommandé en local)
 
 ```bash
 git clone https://github.com/AyetteBoubaya/smartbilling.git
@@ -67,14 +80,56 @@ cd smartbilling
 docker-compose up --build
 ```
 
-L'application démarre sur **http://localhost:8081**  
+L'application démarre sur **http://localhost:8081**
 Swagger UI disponible sur **http://localhost:8081/swagger-ui.html**
 
-### Sans Docker (développement local)
+### Option 3 — Sans Docker
 
 ```bash
 # Prérequis : Java 17, Maven, PostgreSQL local
 mvn spring-boot:run
+```
+
+---
+
+## 🏗️ Architecture
+
+```
+src/
+├── auth/
+│   ├── config/          # SecurityConfig, OpenApiConfig
+│   ├── controller/      # AuthController, PasswordController, UserController
+│   ├── domain/          # User, Token, TokenType
+│   ├── dto/
+│   │   ├── requests/    # UserRequest, LoginRequest, ForgotPasswordRequest...
+│   │   └── responses/   # AuthResponse, UserResponse, MessageResponse...
+│   ├── repository/      # UserRepository, TokenRepository
+│   ├── security/        # JwtService, JwtAuthFilter, UserDetailsServiceImpl
+│   └── service/         # AuthService, PasswordService, UserService, EmailService
+├── refresh/
+│   ├── domain/          # RefreshToken
+│   ├── repository/      # RefreshTokenRepository
+│   └── service/         # RefreshTokenService
+├── client/
+│   ├── controller/      # ClientController
+│   ├── domain/          # Client
+│   ├── dto/             # ClientRequest, ClientResponse
+│   ├── repository/      # ClientRepository
+│   └── service/         # ClientService, ClientServiceImpl
+├── product/
+│   ├── controller/      # ProductController
+│   ├── domain/          # Product, ProductCategory
+│   ├── dto/             # ProductRequest, ProductResponse
+│   ├── repository/      # ProductRepository
+│   └── service/         # ProductService, ProductServiceImpl
+├── invoice/
+│   ├── controller/      # InvoiceController
+│   ├── domain/          # Invoice, InvoiceItem, InvoiceStatus
+│   ├── dto/             # InvoiceRequest, InvoiceResponse, InvoiceItemRequest...
+│   ├── repository/      # InvoiceRepository
+│   └── service/         # InvoiceService, InvoiceServiceImpl
+└── shared/
+    └── exception/       # GlobalExceptionHandler, ResourceNotFoundException...
 ```
 
 ---
@@ -105,12 +160,64 @@ mvn spring-boot:run
 
 ---
 
+## 🏢 Module Clients — Endpoints
+
+| Méthode | Endpoint | Description |
+|---|---|---|
+| `POST` | `/api/clients` | Créer un client (ADMIN) |
+| `GET` | `/api/clients` | Lister avec pagination et recherche |
+| `GET` | `/api/clients?search=dupont` | Recherche par nom ou email |
+| `GET` | `/api/clients?page=0&size=10` | Pagination |
+| `GET` | `/api/clients/{id}` | Récupérer un client |
+| `PUT` | `/api/clients/{id}` | Modifier un client (ADMIN) |
+| `DELETE` | `/api/clients/{id}` | Supprimer un client (ADMIN) |
+
+---
+
+## 📦 Module Produits — Endpoints
+
+| Méthode | Endpoint | Description |
+|---|---|---|
+| `POST` | `/api/products` | Créer un produit (ADMIN) |
+| `GET` | `/api/products` | Lister avec pagination et recherche |
+| `GET` | `/api/products?category=SERVICE` | Filtrer par catégorie |
+| `GET` | `/api/products/{id}` | Récupérer un produit |
+| `PUT` | `/api/products/{id}` | Modifier un produit (ADMIN) |
+| `DELETE` | `/api/products/{id}` | Supprimer un produit (ADMIN) |
+
+Catégories disponibles : `SERVICE` `FOURNITURE` `LOGICIEL` `MATERIEL` `CONSEIL` `AUTRE`
+
+---
+
+## 🧾 Module Factures — Endpoints
+
+| Méthode | Endpoint | Description |
+|---|---|---|
+| `POST` | `/api/invoices` | Créer une facture (ADMIN) |
+| `GET` | `/api/invoices` | Lister avec filtres et pagination |
+| `GET` | `/api/invoices?status=SENT` | Filtrer par statut |
+| `GET` | `/api/invoices?customerId=1` | Factures d'un client |
+| `GET` | `/api/invoices/{id}` | Récupérer une facture |
+| `PATCH` | `/api/invoices/{id}/status` | Changer le statut |
+| `DELETE` | `/api/invoices/{id}` | Supprimer (DRAFT uniquement) |
+| `GET` | `/api/invoices/{id}/pdf` | Télécharger le PDF |
+
+### Cycle de vie d'une facture
+
+```
+DRAFT → SENT → PAID
+          ↓      ↓
+        OVERDUE  CANCELLED
+```
+
+---
+
 ## 💡 Exemples d'utilisation
 
 ### Inscription
 
 ```bash
-curl -X POST http://localhost:8081/api/auth/register \
+curl -X POST https://smartbilling-production.up.railway.app/api/auth/register \
   -H "Content-Type: application/json" \
   -d '{
     "email": "user@example.com",
@@ -122,7 +229,7 @@ curl -X POST http://localhost:8081/api/auth/register \
 ### Login
 
 ```bash
-curl -X POST http://localhost:8081/api/auth/login \
+curl -X POST https://smartbilling-production.up.railway.app/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{
     "email": "user@example.com",
@@ -143,34 +250,43 @@ Réponse :
 }
 ```
 
-### Requête authentifiée
+### Créer une facture
 
 ```bash
-curl -X GET http://localhost:8081/api/users/user@example.com \
-  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiJ9..."
+curl -X POST https://smartbilling-production.up.railway.app/api/invoices \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "customerId": 1,
+    "items": [
+      { "productId": 1, "quantity": 2 }
+    ],
+    "issueDate": "2026-08-06",
+    "dueDate": "2026-09-06"
+  }'
 ```
 
----
+Réponse :
 
-## 🏗️ Architecture
-
+```json
+{
+  "id": 1,
+  "invoiceNumber": "INV-2026-0001",
+  "customerName": "Dupont SA",
+  "status": "DRAFT",
+  "totalHT": 2000.00,
+  "totalTVA": 400.00,
+  "totalTTC": 2400.00,
+  "items": [...]
+}
 ```
-src/
-├── auth/
-│   ├── config/          # SecurityConfig, OpenApiConfig
-│   ├── controller/      # AuthController, PasswordController, UserController
-│   ├── domain/          # User, Token, TokenType
-│   ├── dto/
-│   │   ├── requests/    # UserRequest, LoginRequest, ForgotPasswordRequest...
-│   │   └── responses/   # AuthResponse, UserResponse, MessageResponse...
-│   ├── exception/       # GlobalExceptionHandler
-│   ├── repository/      # UserRepository, TokenRepository
-│   ├── security/        # JwtService, JwtAuthFilter, UserDetailsServiceImpl
-│   └── service/         # AuthService, PasswordService, UserService, EmailService
-└── refresh/
-    ├── domain/          # RefreshToken
-    ├── repository/      # RefreshTokenRepository
-    └── service/         # RefreshTokenService
+
+### Télécharger le PDF
+
+```bash
+curl -X GET https://smartbilling-production.up.railway.app/api/invoices/1/pdf \
+  -H "Authorization: Bearer <token>" \
+  --output facture-1.pdf
 ```
 
 ---
@@ -215,6 +331,7 @@ Client                    API                      DB
 - CSRF désactivé (JWT stateless)
 - CORS configuré
 - Validation des inputs avec Jakarta Validation
+- Exceptions typées avec codes HTTP appropriés (400, 401, 403, 404, 409)
 
 ---
 
@@ -223,9 +340,6 @@ Client                    API                      DB
 ```bash
 # Lancer tous les tests
 mvn test
-
-# Résultat attendu
-Tests run: 26, Failures: 0, Errors: 0, Skipped: 0
 ```
 
 | Classe de test | Type | Description |
@@ -235,6 +349,9 @@ Tests run: 26, Failures: 0, Errors: 0, Skipped: 0
 | `PasswordServiceImplTest` | Unitaire | Forgot/reset password |
 | `AuthControllerIntegrationTest` | Intégration | Endpoints HTTP + sécurité |
 | `UserControllerIntegrationTest` | Intégration | Autorisations ADMIN |
+| `ClientServiceImplTest` | Unitaire | CRUD clients + pagination |
+| `ProductServiceImplTest` | Unitaire | CRUD produits + calcul TTC |
+| `InvoiceServiceImplTest` | Unitaire | Factures + numérotation auto |
 
 ---
 
@@ -248,8 +365,12 @@ Tests run: 26, Failures: 0, Errors: 0, Skipped: 0
 | `APP_JWT_SECRET` | Secret JWT (256 bits min) | — |
 | `APP_JWT_EXPIRATION_MS` | Durée access token (ms) | `900000` (15 min) |
 | `APP_JWT_REFRESH_EXPIRATION_MS` | Durée refresh token (ms) | `604800000` (7 jours) |
+| `SPRING_MAIL_HOST` | Serveur SMTP | `smtp.gmail.com` |
+| `SPRING_MAIL_PORT` | Port SMTP | `587` |
 | `SPRING_MAIL_USERNAME` | Email Gmail | — |
 | `SPRING_MAIL_PASSWORD` | App password Gmail | — |
+| `APP_FRONTEND_URL` | URL du frontend (CORS) | `http://localhost:4200` |
+| `SERVER_PORT` | Port de l'application | `8081` |
 
 ---
 
@@ -262,5 +383,7 @@ MIT License — voir [LICENSE](LICENSE)
 <div align="center">
 
 **SmartBilling** — Développé avec ❤️ par [Ayette Boubaya](https://github.com/AyetteBoubaya)
+
+🔗 [API Live](https://smartbilling-production.up.railway.app/swagger-ui.html) · 💻 [GitHub](https://github.com/AyetteBoubaya/smartbilling)
 
 </div>
